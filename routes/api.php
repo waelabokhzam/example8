@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::post('register', [Register::class, 'register']);
 Route::post('login', [Register::class, 'login']);
+Route::post('loginremotely', [Register::class, 'login_remotely']);
 Route::middleware('auth:api')->group(function () {
     Route::resource('post', 'PostController');
     Route::get('get_user', [Register::class, 'get_user']);
@@ -81,4 +82,4 @@ Route::get('get_roll', [Register::class, 'get_roll']);
 Route::post('edit_notify', [Register::class, 'edit_notify']);
 
 Route::get('update_chef', [Register::class, 'update_chef']);
-Route::get('get_chef_notify',[Register::class,'get_chef_notify']);
+Route::get('get_chef_notify', [Register::class, 'get_chef_notify']);

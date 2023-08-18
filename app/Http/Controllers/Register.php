@@ -8,13 +8,14 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class Register extends Base
 {
     public function register(Request $request)
     {
-        $validateor = Validator::class::make($request->all(), [
+        $input = $request->all();
+        $validateor = Validator::make($input, [
             'name' => 'required',
             'email' => 'required|email',
             'password' => 'required',
@@ -23,13 +24,10 @@ class Register extends Base
         if ($validateor->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Error Validation',
-                'error' => $validateor->errors(),
+                'message' => 'error',
             ]);
-            // return $this->sendError('pleas_validate_error', $validateor->errors());
         }
 
-        $input = $request->all();
         $input['password'] = Hash::make($input['password']);
         $user = User::create($input);
         $success['token'] = $user->createToken('badkend8')->accessToken;
@@ -45,6 +43,64 @@ class Register extends Base
 
     public function login(Request $request)
     {
+        $input = $request->all();
+        $validateor = Validator::make($input, [
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
+        if ($validateor->fails()) {
+            return response()->json([
+                'status' => 'ft',
+                'message' => 'error',
+            ]);
+        }
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            /** @var \App\Models\User $user **/
+            $user = Auth::user();
+            if (($request->countryside) && ($request->street)) {
+                $id = User::find($user->id);
+                $id->countryside = $request->countryside;
+                $id->street = $request->street;
+                $id->save();
+            }
+            $success['token'] = $user->createToken('backend')->accessToken;
+            $success['name'] = $user->name;
+            $success['role'] = $user->role;
+            $success['id'] = $user->id;
+            return response()->json([
+                'token' => $success['token'],
+                'message' => 'login successfully',
+                'status' => true,
+                'user_id' => $success['id'],
+                'username' => $success['name'],
+                'role' => $success['role'],
+            ]);
+
+            //return $this->sendResponse($success, 'Login Successfully');
+        } else {
+            return response()->json([
+                'status' => false,
+                'message' => 'UnAuthorised',
+            ]);
+            // return $this->sendError('please check your auth ', ['error' => 'unauthorised']);
+        }
+    }
+
+    public function login_remotely(Request $request)
+    {
+        $input = $request->all();
+        $validateor = Validator::make($input, [
+            'email' => 'required|email',
+            'password' => 'required',
+            'street' => 'required',
+            'countryside' => 'required',
+        ]);
+        if ($validateor->fails()) {
+            return response()->json([
+                'status' => 'ft',
+                'message' => 'error',
+            ]);
+        }
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             /** @var \App\Models\User $user **/
             $user = Auth::user();
@@ -195,17 +251,17 @@ class Register extends Base
             'status' => true,
         ]);
     }
-    public function get_chef_notify(){
-        $u=User::where('role',3)->where('notify',1)->get();
-        if($u){
+    public function get_chef_notify()
+    {
+        $u = User::where('role', 3)->where('notify', 1)->get();
+        if ($u) {
             return response()->json([
-                'status'=>true,
+                'status' => true,
 
             ]);
-        }
-        else{
+        } else {
             return response()->json([
-                'status'=>false
+                'status' => false,
             ]);
         }
     }
